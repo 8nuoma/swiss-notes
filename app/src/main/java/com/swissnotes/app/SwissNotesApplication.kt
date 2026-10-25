@@ -5,12 +5,12 @@ import com.swissnotes.app.data.NoteRepository
 import com.swissnotes.app.data.local.AppDatabase
 
 /**
- * Application-scoped container that constructs the data layer manually,
- * keeping dependencies minimal while retaining a clean architecture.
+ * Application-scoped container that constructs the data layer manually.
  */
 class SwissNotesApplication : Application() {
 
     val repository: NoteRepository by lazy {
-        NoteRepository(AppDatabase.getInstance(this).noteDao())
+        val db = AppDatabase.getInstance(this)
+        NoteRepository(db.noteDao(), db.folderDao(), db.tagDao(), db.linkDao())
     }
 }

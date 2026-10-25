@@ -1,4 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Swiss Notes</string>
+
+    <!-- Notes list -->
+    <string name="notes_title">Notes</string>
+    <string name="notes_count">%1$d notes</string>
+    <string name="search_hint">Search</string>
+    <string name="empty_title">No notes yet</string>
+    <string name="empty_hint">Tap + to capture your first thought.</string>
+    <string name="untitled">Untitled</string>
+    <string name="new_note">New note</string>
+
+    <!-- Folders & tags -->
+    <string name="all_notes">All notes</string>
+    <string name="folders">Folders</string>
+    <string name="tags">Tags</string>
+    <string name="new_folder">New folder</string>
+    <string name="folder_name">Folder name</string>
+    <string name="new_tag">New tag</string>
+    <string name="tag_name">Tag name</string>
+    <string name="create">Create</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="rename">Rename</string>
+
+    <!-- Editor -->
+    <string name="title_hint">Title</string>
+    <string name="content_hint">Write something…</string>
+    <string name="save">Save</string>
+    <string name="back">Back</string>
+    <string name="checklist">Checklist</string>
+    <string name="add_tag">Add tag</string>
+    <string name="insert_link">Insert link</string>
+    <string name="insert_wikilink">Link to note</string>
+    <string name="link_to">Link to</string>
+    <string name="links">Links</string>
+    <string name="backlinks">Backlinks</string>
+    <string name="no_links">No links</string>
+    <string name="select_color">Color</string>
+
+    <!-- Graph -->
+    <string name="graph">Graph</string>
+    <string name="graph_empty">Create links between notes to see them here.</string>
 </resources>

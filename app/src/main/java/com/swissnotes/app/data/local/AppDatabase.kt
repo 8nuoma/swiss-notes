@@ -6,16 +6,25 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 /**
- * Application database holding the notes table.
+ * Application database holding notes, folders, tags and note links.
  */
 @Database(
-    entities = [NoteEntity::class],
-    version = 1,
+    entities = [
+        NoteEntity::class,
+        FolderEntity::class,
+        TagEntity::class,
+        NoteTagCrossRef::class,
+        NoteLinkEntity::class,
+    ],
+    version = 2,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun noteDao(): NoteDao
+    abstract fun folderDao(): FolderDao
+    abstract fun tagDao(): TagDao
+    abstract fun linkDao(): LinkDao
 
     companion object {
         @Volatile
@@ -27,7 +36,11 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "swiss_notes.db",
-                ).build().also { instance = it }
+                )
+                    // Rebuild on schema change during early development.
+                    .fallbackToDestructiveMigration()
+                    .build()
+                    .also { instance = it }
             }
     }
 }

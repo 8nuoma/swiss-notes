@@ -13,3 +13,6 @@ local.properties
 
 # Build environment (local only)
 build-env.sh
+
+# Built artifacts
+*.apk

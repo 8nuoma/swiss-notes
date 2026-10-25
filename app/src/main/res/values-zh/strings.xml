@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">瑞士笔记</string>
+
+    <!-- Notes list -->
+    <string name="notes_title">笔记</string>
+    <string name="notes_count">%1$d 篇笔记</string>
+    <string name="search_hint">搜索</string>
+    <string name="empty_title">还没有笔记</string>
+    <string name="empty_hint">点击 + 记录你的第一条想法。</string>
+    <string name="untitled">无标题</string>
+    <string name="new_note">新建笔记</string>
+
+    <!-- Folders & tags -->
+    <string name="all_notes">全部笔记</string>
+    <string name="folders">文件夹</string>
+    <string name="tags">标签</string>
+    <string name="new_folder">新建文件夹</string>
+    <string name="folder_name">文件夹名称</string>
+    <string name="new_tag">新建标签</string>
+    <string name="tag_name">标签名称</string>
+    <string name="create">创建</string>
+    <string name="cancel">取消</string>
+    <string name="delete">删除</string>
+    <string name="rename">重命名</string>
+
+    <!-- Editor -->
+    <string name="title_hint">标题</string>
+    <string name="content_hint">写点什么…</string>
+    <string name="save">保存</string>
+    <string name="back">返回</string>
+    <string name="checklist">清单</string>
+    <string name="add_tag">添加标签</string>
+    <string name="insert_link">插入链接</string>
+    <string name="insert_wikilink">链接到笔记</string>
+    <string name="link_to">链接到</string>
+    <string name="links">链接</string>
+    <string name="backlinks">反向链接</string>
+    <string name="no_links">暂无链接</string>
+    <string name="select_color">颜色</string>
+
+    <!-- Graph -->
+    <string name="graph">图谱</string>
+    <string name="graph_empty">在笔记之间建立链接后，这里会显示关系图谱。</string>
+</resources>

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swissnotes.app.ui.editor.EditorViewModel
+import com.swissnotes.app.ui.graph.GraphViewModel
 import com.swissnotes.app.ui.notes.NotesViewModel
 
 /**
@@ -20,6 +21,9 @@ object AppViewModelProvider {
         }
         initializer {
             EditorViewModel(swissNotesApplication().repository, createSavedStateHandle())
+        }
+        initializer {
+            GraphViewModel(swissNotesApplication().repository)
         }
     }
 }

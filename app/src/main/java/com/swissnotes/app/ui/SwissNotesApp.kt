@@ -11,6 +11,8 @@ import androidx.navigation.navArgument
 import com.swissnotes.app.AppViewModelProvider
 import com.swissnotes.app.ui.editor.EditorScreen
 import com.swissnotes.app.ui.editor.EditorViewModel
+import com.swissnotes.app.ui.graph.GraphScreen
+import com.swissnotes.app.ui.graph.GraphViewModel
 import com.swissnotes.app.ui.notes.NotesScreen
 import com.swissnotes.app.ui.notes.NotesViewModel
 
@@ -24,9 +26,13 @@ object EditorDestination {
     const val routeWithArgs = "editor?$NOTE_ID_ARG={$NOTE_ID_ARG}"
 }
 
+object GraphDestination {
+    const val ROUTE = "graph"
+}
+
 /**
- * Top-level navigation graph. A single-activity app with two
- * destinations: the notes list and the note editor.
+ * Top-level navigation graph. Single-activity app with three
+ * destinations: notes list, note editor, and the knowledge graph.
  */
 @Composable
 fun SwissNotesApp(modifier: Modifier = Modifier) {
@@ -38,16 +44,12 @@ fun SwissNotesApp(modifier: Modifier = Modifier) {
         modifier = modifier,
     ) {
         composable(route = NotesDestination.ROUTE) {
-            val viewModel: NotesViewModel =
-                viewModel(factory = AppViewModelProvider.Factory)
+            val viewModel: NotesViewModel = viewModel(factory = AppViewModelProvider.Factory)
             NotesScreen(
                 viewModel = viewModel,
-                onNoteClick = { id ->
-                    navController.navigate("editor?noteId=$id")
-                },
-                onNewNote = {
-                    navController.navigate(EditorDestination.ROUTE)
-                },
+                onNoteClick = { id -> navController.navigate("editor?noteId=$id") },
+                onNewNote = { navController.navigate(EditorDestination.ROUTE) },
+                onOpenGraph = { navController.navigate(GraphDestination.ROUTE) },
             )
         }
         composable(
@@ -59,11 +61,19 @@ fun SwissNotesApp(modifier: Modifier = Modifier) {
                 },
             ),
         ) {
-            val viewModel: EditorViewModel =
-                viewModel(factory = AppViewModelProvider.Factory)
+            val viewModel: EditorViewModel = viewModel(factory = AppViewModelProvider.Factory)
             EditorScreen(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
+                onOpenNote = { id -> navController.navigate("editor?noteId=$id") },
+            )
+        }
+        composable(route = GraphDestination.ROUTE) {
+            val viewModel: GraphViewModel = viewModel(factory = AppViewModelProvider.Factory)
+            GraphScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                onOpenNote = { id -> navController.navigate("editor?noteId=$id") },
             )
         }
     }
