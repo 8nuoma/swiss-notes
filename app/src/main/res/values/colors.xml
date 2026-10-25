@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Swiss / International Typographic Style: monochrome with a single accent -->
+    <color name="swiss_black">#111111</color>
+    <color name="swiss_white">#FFFFFF</color>
+    <color name="swiss_off_white">#FAFAF8</color>
+    <color name="swiss_grey">#6B6B6B</color>
+    <color name="swiss_light_grey">#E5E5E2</color>
+    <color name="swiss_accent">#E0392B</color>
+</resources>
