@@ -18,7 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Menu
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
@@ -143,7 +143,7 @@ fun NotesScreen(
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.Menu,
+                                imageVector = Icons.Outlined.Menu,
                                 contentDescription = "Menu",
                                 tint = SwissColors.Black,
                             )
