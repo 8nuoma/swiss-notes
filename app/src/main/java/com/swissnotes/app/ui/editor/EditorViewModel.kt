@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
 /**
  * UI state for the note editor.
  */
@@ -27,8 +28,11 @@ data class EditorUiState(
 )
 
 /**
- * ViewModel for the note editor. Loads a note by id and persists edits,
- * including tags and wikilinks.
+ * ViewModel for the note editor. Loads a note by id and persists edits.
+ *
+ * The note is always created *before* entering the editor (see
+ * [NotesViewModel.createNote]), so [noteId] is never 0 here. This avoids
+ * races between tagging/linking and the initial save.
  */
 class EditorViewModel(
     private val repository: NoteRepository,
@@ -64,9 +68,7 @@ class EditorViewModel(
             val titles = repository.getAllTitles()
             _uiState.update { it.copy(allTitles = titles) }
         }
-    }
 
-    init {
         viewModelScope.launch {
             repository.observeTagsForNote(noteId).collect { tags ->
                 _uiState.update { it.copy(tags = tags) }
@@ -94,9 +96,12 @@ class EditorViewModel(
         _uiState.update { it.copy(folderId = folderId) }
     }
 
+    /**
+     * Persists the current edit and returns the note id. Idempotent:
+     * called by the save button and by [saveAndExit].
+     */
     suspend fun save(): Long {
         val state = _uiState.value
-        val now = System.currentTimeMillis()
         val note = NoteEntity(
             id = state.noteId,
             title = state.title.trim(),
@@ -104,12 +109,17 @@ class EditorViewModel(
             folderId = state.folderId,
             isChecklist = state.isChecklist,
             color = state.color,
-            createdAt = now,
-            updatedAt = now,
         )
         val savedId = repository.save(note)
         _uiState.update { it.copy(noteId = savedId) }
         return savedId
+    }
+
+    fun saveAndExit(onDone: () -> Unit) {
+        viewModelScope.launch {
+            save()
+            onDone()
+        }
     }
 
     fun insertWikilink(targetTitle: String) {
@@ -121,19 +131,17 @@ class EditorViewModel(
 
     fun addTag(tagName: String) {
         viewModelScope.launch {
-            val id = if (_uiState.value.noteId == 0L) {
-                save()
-            } else {
-                _uiState.value.noteId
-            }
+            // Persist first so the note exists, then attach the tag.
+            val id = if (_uiState.value.noteId == 0L) save() else _uiState.value.noteId
             repository.addTagToNote(id, tagName)
         }
     }
 
-    fun saveAndExit(onDone: () -> Unit) {
+    fun removeTag(tag: TagEntity) {
+        // Remove a single tag association without deleting the tag itself.
         viewModelScope.launch {
-            save()
-            onDone()
+            val remaining = _uiState.value.tags.filter { it.id != tag.id }.map { it.name }
+            repository.setTagsForNote(noteId, remaining)
         }
     }
 }

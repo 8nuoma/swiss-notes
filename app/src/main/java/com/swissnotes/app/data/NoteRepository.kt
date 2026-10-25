@@ -13,7 +13,8 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository exposing notes, folders, tags and links to the rest of the
- * app. It is the single entry point to the data layer.
+ * app. It is the single entry point to the data layer and owns all
+ * business rules (link rebuilding, cascade deletes, timestamps).
  */
 class NoteRepository(
     private val noteDao: NoteDao,
@@ -36,16 +37,28 @@ class NoteRepository(
 
     suspend fun getAllTitles(): List<String> = noteDao.getAllTitles()
 
+    /**
+     * Inserts or updates a note. On update, preserves the original
+     * [NoteEntity.createdAt] and only refreshes [NoteEntity.updatedAt].
+     * Rebuilds wikilinks from the note content on every save.
+     */
     suspend fun save(note: NoteEntity): Long {
-        val id = if (note.id == 0L) {
-            noteDao.insert(note)
+        val now = System.currentTimeMillis()
+        val savedId: Long
+        if (note.id == 0L) {
+            savedId = noteDao.insert(note.copy(createdAt = now, updatedAt = now))
         } else {
-            noteDao.update(note)
-            note.id
+            val existing = noteDao.getNote(note.id)
+            noteDao.update(
+                note.copy(
+                    createdAt = existing?.createdAt ?: now,
+                    updatedAt = now,
+                ),
+            )
+            savedId = note.id
         }
-        // Rebuild links after every save so wikilinks stay in sync.
-        rebuildLinks(id, note.content)
-        return id
+        rebuildLinks(savedId, note.content)
+        return savedId
     }
 
     suspend fun delete(note: NoteEntity) {
@@ -69,7 +82,11 @@ class NoteRepository(
             folder.id
         }
 
-    suspend fun deleteFolder(folder: FolderEntity) = folderDao.delete(folder)
+    suspend fun deleteFolder(folder: FolderEntity) {
+        // Detach notes first so they are not orphaned.
+        noteDao.clearFolder(folder.id)
+        folderDao.delete(folder)
+    }
 
     // ---- Tags ----
 
@@ -77,17 +94,18 @@ class NoteRepository(
 
     fun observeTagsForNote(noteId: Long): Flow<List<TagEntity>> = tagDao.observeTagsForNote(noteId)
 
-    suspend fun addTagToNote(noteId: Long, tagName: String) {
+    suspend fun addTagToNote(noteId: Long, tagName: String): Long {
         val name = tagName.trim().removePrefix("#")
-        if (name.isBlank()) return
+        require(name.isNotBlank()) { "Tag name must not be blank" }
         val existing = tagDao.getTagByName(name)
         val tagId = existing?.id ?: tagDao.insert(TagEntity(name = name))
         tagDao.insertCrossRef(NoteTagCrossRef(noteId = noteId, tagId = tagId))
+        return tagId
     }
 
     suspend fun createTag(tagName: String): Long {
         val name = tagName.trim().removePrefix("#")
-        require(name.isNotBlank())
+        require(name.isNotBlank()) { "Tag name must not be blank" }
         val existing = tagDao.getTagByName(name)
         return existing?.id ?: tagDao.insert(TagEntity(name = name))
     }
@@ -112,14 +130,9 @@ class NoteRepository(
     fun observeBacklinks(noteId: Long): Flow<List<NoteEntity>> =
         linkDao.observeBacklinks(noteId)
 
-    /**
-     * Parses Obsidian-style `[[Note Title]]` wikilinks out of [content]
-     * and persists the resolved links.
-     */
     private suspend fun rebuildLinks(sourceNoteId: Long, content: String) {
         linkDao.deleteLinksFrom(sourceNoteId)
-        val titles = parseWikilinks(content)
-        titles.forEach { title ->
+        parseWikilinks(content).forEach { title ->
             noteDao.getNoteByTitle(title)?.let { target ->
                 if (target.id != sourceNoteId) {
                     linkDao.insert(NoteLinkEntity(sourceNoteId, target.id))

@@ -48,7 +48,6 @@ fun SwissNotesApp(modifier: Modifier = Modifier) {
             NotesScreen(
                 viewModel = viewModel,
                 onNoteClick = { id -> navController.navigate("editor?noteId=$id") },
-                onNewNote = { navController.navigate(EditorDestination.ROUTE) },
                 onOpenGraph = { navController.navigate(GraphDestination.ROUTE) },
             )
         }

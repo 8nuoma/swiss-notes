@@ -6,13 +6,14 @@ import com.swissnotes.app.data.NoteRepository
 import com.swissnotes.app.data.local.FolderEntity
 import com.swissnotes.app.data.local.NoteEntity
 import com.swissnotes.app.data.local.TagEntity
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -30,7 +31,8 @@ data class NotesUiState(
 
 /**
  * ViewModel for the notes list. Exposes a single [uiState] [StateFlow]
- * and receives user actions as method calls (UDF).
+ * and receives user actions as method calls (UDF). One-shot events
+ * (e.g. "a note was just created, open it") are exposed via [events].
  */
 class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
 
@@ -40,6 +42,9 @@ class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NotesUiState())
     val uiState: StateFlow<NotesUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<Long>()
+    val events: SharedFlow<Long> = _events.asSharedFlow()
 
     private val notesFlow = combine(queryFlow, folderFlow, tagFlow) { query, folderId, tagId ->
         if (tagId != null) {
@@ -53,23 +58,15 @@ class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
     private val tagsFlow = repository.observeTags()
 
     init {
-        // Notes react to query/folder/tag.
         viewModelScope.launch {
-            notesFlow.collect { notes ->
-                _uiState.update { it.copy(notes = notes) }
-            }
+            notesFlow.collect { notes -> _uiState.update { it.copy(notes = notes) } }
         }
         viewModelScope.launch {
-            foldersFlow.collect { folders ->
-                _uiState.update { it.copy(folders = folders) }
-            }
+            foldersFlow.collect { folders -> _uiState.update { it.copy(folders = folders) } }
         }
         viewModelScope.launch {
-            tagsFlow.collect { tags ->
-                _uiState.update { it.copy(tags = tags) }
-            }
+            tagsFlow.collect { tags -> _uiState.update { it.copy(tags = tags) } }
         }
-        // Selection state.
         viewModelScope.launch {
             queryFlow.collect { q -> _uiState.update { it.copy(query = q) } }
         }
@@ -100,6 +97,17 @@ class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
         tagFlow.value = null
     }
 
+    /**
+     * Creates a blank note and emits its id as an event so the UI can
+     * navigate into the editor with a real, persisted id.
+     */
+    fun createNote() {
+        viewModelScope.launch {
+            val id = repository.save(NoteEntity(title = "", content = ""))
+            _events.emit(id)
+        }
+    }
+
     fun deleteNote(note: NoteEntity) {
         viewModelScope.launch { repository.delete(note) }
     }
@@ -111,6 +119,12 @@ class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
     fun createFolder(name: String) {
         viewModelScope.launch {
             if (name.isNotBlank()) repository.saveFolder(FolderEntity(name = name.trim()))
+        }
+    }
+
+    fun renameFolder(folder: FolderEntity, newName: String) {
+        viewModelScope.launch {
+            if (newName.isNotBlank()) repository.saveFolder(folder.copy(name = newName.trim()))
         }
     }
 

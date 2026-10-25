@@ -23,6 +23,9 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="rename">Rename</string>
+    <string name="delete_note_confirm">Delete this note permanently?</string>
+    <string name="delete_folder_confirm">Delete folder “%1$s”? Notes inside will be kept.</string>
+    <string name="delete_tag_confirm">Delete tag “%1$s”? It will be removed from all notes.</string>
 
     <!-- Editor -->
     <string name="title_hint">Title</string>

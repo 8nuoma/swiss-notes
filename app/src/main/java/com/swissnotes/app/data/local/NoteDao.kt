@@ -55,4 +55,8 @@ interface NoteDao {
 
     @Delete
     suspend fun delete(note: NoteEntity)
+
+    /** Detach all notes from a folder before the folder is deleted. */
+    @Query("UPDATE notes SET folderId = NULL WHERE folderId = :folderId")
+    suspend fun clearFolder(folderId: Long)
 }
