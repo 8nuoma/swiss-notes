@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.swissnotes.app.ui.theme.SwissColors
@@ -124,7 +125,7 @@ fun EditorScreen(
                 shape = RoundedCornerShape(0.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = SwissColors.LightGrey,
-                    unfocusedBorderColor = SwissColors.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
                     focusedTextColor = SwissColors.Black,
                     unfocusedTextColor = SwissColors.Black,
                     cursorColor = SwissColors.Accent,
