@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">瑞士笔记</string>
+    <string name="app_name">olay</string>
 
     <!-- Notes list -->
     <string name="notes_title">笔记</string>

@@ -82,6 +82,9 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
+    // Image loading
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
 

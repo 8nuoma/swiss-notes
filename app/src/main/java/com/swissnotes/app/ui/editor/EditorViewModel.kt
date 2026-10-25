@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * UI state for the note editor.
+ * UI state for the note editor. Kept minimal: only data that is not
+ * typed live (tags, links, note metadata). The title and body are held
+ * as local Compose state so keystrokes do not recompose the whole screen.
  */
 data class EditorUiState(
     val noteId: Long = 0L,
@@ -29,10 +31,7 @@ data class EditorUiState(
 
 /**
  * ViewModel for the note editor. Loads a note by id and persists edits.
- *
- * The note is always created *before* entering the editor (see
- * [NotesViewModel.createNote]), so [noteId] is never 0 here. This avoids
- * races between tagging/linking and the initial save.
+ * The note is created before entering the editor, so [noteId] is never 0.
  */
 class EditorViewModel(
     private val repository: NoteRepository,
@@ -76,14 +75,6 @@ class EditorViewModel(
         }
     }
 
-    fun onTitleChange(value: String) {
-        _uiState.update { it.copy(title = value) }
-    }
-
-    fun onContentChange(value: String) {
-        _uiState.update { it.copy(content = value) }
-    }
-
     fun onChecklistToggle() {
         _uiState.update { it.copy(isChecklist = !it.isChecklist) }
     }
@@ -97,15 +88,15 @@ class EditorViewModel(
     }
 
     /**
-     * Persists the current edit and returns the note id. Idempotent:
-     * called by the save button and by [saveAndExit].
+     * Persists the given title/content together with current metadata.
+     * Returns the note id.
      */
-    suspend fun save(): Long {
+    suspend fun save(title: String, content: String): Long {
         val state = _uiState.value
         val note = NoteEntity(
             id = state.noteId,
-            title = state.title.trim(),
-            content = state.content,
+            title = title.trim(),
+            content = content,
             folderId = state.folderId,
             isChecklist = state.isChecklist,
             color = state.color,
@@ -115,33 +106,33 @@ class EditorViewModel(
         return savedId
     }
 
-    fun saveAndExit(onDone: () -> Unit) {
+    fun saveAndExit(title: String, content: String, onDone: () -> Unit) {
         viewModelScope.launch {
-            save()
+            save(title, content)
             onDone()
         }
     }
 
-    fun insertWikilink(targetTitle: String) {
-        val current = _uiState.value.content
-        val separator = if (current.isEmpty() || current.endsWith("\n")) "" else "\n"
-        val link = "$separator[[$targetTitle]]"
-        _uiState.update { it.copy(content = it.content + link) }
-    }
-
     fun addTag(tagName: String) {
         viewModelScope.launch {
-            // Persist first so the note exists, then attach the tag.
-            val id = if (_uiState.value.noteId == 0L) save() else _uiState.value.noteId
+            val id = if (_uiState.value.noteId == 0L) {
+                // Rare: note not yet persisted. Persist with empty text.
+                save("", "")
+            } else {
+                _uiState.value.noteId
+            }
             repository.addTagToNote(id, tagName)
         }
     }
 
     fun removeTag(tag: TagEntity) {
-        // Remove a single tag association without deleting the tag itself.
         viewModelScope.launch {
             val remaining = _uiState.value.tags.filter { it.id != tag.id }.map { it.name }
             repository.setTagsForNote(noteId, remaining)
         }
     }
+
+    /** Resolves a wikilink title to a note, for preview-mode link taps. */
+    suspend fun resolveByTitle(title: String): NoteEntity? =
+        repository.getNoteByTitle(title)
 }

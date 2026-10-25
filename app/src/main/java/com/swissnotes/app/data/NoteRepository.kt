@@ -35,6 +35,8 @@ class NoteRepository(
 
     suspend fun getNote(id: Long): NoteEntity? = noteDao.getNote(id)
 
+    suspend fun getNoteByTitle(title: String): NoteEntity? = noteDao.getNoteByTitle(title)
+
     suspend fun getAllTitles(): List<String> = noteDao.getAllTitles()
 
     /**
