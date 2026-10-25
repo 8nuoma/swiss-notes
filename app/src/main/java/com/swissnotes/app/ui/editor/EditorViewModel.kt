@@ -94,7 +94,7 @@ class EditorViewModel(
         _uiState.update { it.copy(folderId = folderId) }
     }
 
-    fun save(): Long {
+    suspend fun save(): Long {
         val state = _uiState.value
         val now = System.currentTimeMillis()
         val note = NoteEntity(
@@ -107,29 +107,33 @@ class EditorViewModel(
             createdAt = now,
             updatedAt = now,
         )
-        var savedId = state.noteId
-        viewModelScope.launch {
-            savedId = repository.save(note)
-            _uiState.update { it.copy(noteId = savedId) }
-        }
+        val savedId = repository.save(note)
+        _uiState.update { it.copy(noteId = savedId) }
         return savedId
     }
 
     fun insertWikilink(targetTitle: String) {
-        val link = "[[$targetTitle]]"
+        val current = _uiState.value.content
+        val separator = if (current.isEmpty() || current.endsWith("\n")) "" else "\n"
+        val link = "$separator[[$targetTitle]]"
         _uiState.update { it.copy(content = it.content + link) }
     }
 
     fun addTag(tagName: String) {
-        val state = _uiState.value
         viewModelScope.launch {
-            // If the note is not yet saved, persist it first.
-            val id = if (state.noteId == 0L) {
+            val id = if (_uiState.value.noteId == 0L) {
                 save()
             } else {
-                state.noteId
+                _uiState.value.noteId
             }
             repository.addTagToNote(id, tagName)
+        }
+    }
+
+    fun saveAndExit(onDone: () -> Unit) {
+        viewModelScope.launch {
+            save()
+            onDone()
         }
     }
 }

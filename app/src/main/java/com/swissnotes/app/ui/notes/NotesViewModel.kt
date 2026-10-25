@@ -49,27 +49,35 @@ class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
         }
     }.flatMapLatest { it }
 
-    val notes: StateFlow<List<NoteEntity>> =
-        notesFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    val folders: StateFlow<List<FolderEntity>> =
-        repository.observeFolders().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    val tags: StateFlow<List<TagEntity>> =
-        repository.observeTags().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    private val foldersFlow = repository.observeFolders()
+    private val tagsFlow = repository.observeTags()
 
     init {
+        // Notes react to query/folder/tag.
         viewModelScope.launch {
-            combine(notes, folders, tags, queryFlow, folderFlow, tagFlow) { n, f, t, q, fol, tag ->
-                NotesUiState(
-                    query = q,
-                    selectedFolderId = fol,
-                    selectedTagId = tag,
-                    notes = n,
-                    folders = f,
-                    tags = t,
-                )
-            }.collect { _uiState.value = it }
+            notesFlow.collect { notes ->
+                _uiState.update { it.copy(notes = notes) }
+            }
+        }
+        viewModelScope.launch {
+            foldersFlow.collect { folders ->
+                _uiState.update { it.copy(folders = folders) }
+            }
+        }
+        viewModelScope.launch {
+            tagsFlow.collect { tags ->
+                _uiState.update { it.copy(tags = tags) }
+            }
+        }
+        // Selection state.
+        viewModelScope.launch {
+            queryFlow.collect { q -> _uiState.update { it.copy(query = q) } }
+        }
+        viewModelScope.launch {
+            folderFlow.collect { f -> _uiState.update { it.copy(selectedFolderId = f) } }
+        }
+        viewModelScope.launch {
+            tagFlow.collect { t -> _uiState.update { it.copy(selectedTagId = t) } }
         }
     }
 
@@ -103,12 +111,6 @@ class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
     fun createFolder(name: String) {
         viewModelScope.launch {
             if (name.isNotBlank()) repository.saveFolder(FolderEntity(name = name.trim()))
-        }
-    }
-
-    fun renameFolder(folder: FolderEntity, newName: String) {
-        viewModelScope.launch {
-            if (newName.isNotBlank()) repository.saveFolder(folder.copy(name = newName.trim()))
         }
     }
 

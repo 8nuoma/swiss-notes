@@ -34,6 +34,8 @@ class NoteRepository(
 
     suspend fun getNote(id: Long): NoteEntity? = noteDao.getNote(id)
 
+    suspend fun getAllTitles(): List<String> = noteDao.getAllTitles()
+
     suspend fun save(note: NoteEntity): Long {
         val id = if (note.id == 0L) {
             noteDao.insert(note)

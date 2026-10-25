@@ -110,7 +110,7 @@ fun EditorScreen(
                             tint = SwissColors.Black,
                         )
                     }
-                    IconButton(onClick = { viewModel.save(); onBack() }) {
+                    IconButton(onClick = { viewModel.saveAndExit(onBack) }) {
                         Icon(
                             imageVector = Icons.Outlined.Check,
                             contentDescription = stringResource(R.string.save),
@@ -315,8 +315,8 @@ private fun LinkPanel(
     onOpenNote: (Long) -> Unit,
 ) {
     if (noteId == 0L) return
-    val outgoing by viewModel.outgoingLinks.collectAsStateWithLifecycle()
-    val backlinks by viewModel.backlinks.collectAsStateWithLifecycle()
+    val outgoing by viewModel.outgoingLinks.collectAsStateWithLifecycle(initialValue = emptyList())
+    val backlinks by viewModel.backlinks.collectAsStateWithLifecycle(initialValue = emptyList())
 
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         if (backlinks.isNotEmpty() || outgoing.isNotEmpty()) {
